@@ -1,0 +1,140 @@
+---
+title: "CyclisticBikeShare"
+author: "Tejaswi"
+date: "2022-12-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This research is for Google Data Analytics Certificate Capstone Project.It was inspired by Kevin Hartman's case study "'Sophisticated, Clear, and Polished': Divvy and Data Visualization" (available here:https://artscience.blog/home/divvy-dataviz-case-study).
+
+## Scenario
+
+I am a junior data analyst working in the marketing analyst team at Cyclistic, a bike share company in chicago. The director of marketing believes the company's future success depends on maximizing the number of annual memberships. Therefore my team wants to understand how casual riders and annual members use cyclistic bikes differently and design a new marketing strategy to convert casual riders into annual members
+
+## Key Stakeholders
+
+* Lily Moreno, Director of Marketing
+* Marketing Analytics Team
+* Cyclistic Executive Team
+
+## Business Task
+
+To understand how casual riders and annual members use cyclistic bikes differently and design marketing strategy to maximize the number of annual Memberships by converting casual riders into annual members
+
+## Preparing Data
+
+The data has been made available by Motivate International Inc. The data is original and [Licensed](https://ride.divvybikes.com/data-license-agreement)
+
+Citation - The data is available on https://www.divvybikes.com/system-data and is owned by the City of Chicago
+
+#### Installing required Packages
+
+Use install.packages("tidyverse") to install tidyverse
+Tidyverse - A system of packages in R with a common design philosophy for data manipulation, exploration and visualization
+
+Lubridate - It is an R package that makes it easier to work with dates and times
+
+ggplot2 - Creates a variety of data visualizations by applying different visual properties to the data variables in R.
+
+```{r cars}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+```
+
+#### Collecting Data
+
+readr - It is used for importing data
+
+read_csv() -> This function is used to import csv files and reads the data as data frames from it. it is available under readr package.
+```{r collecting data}
+library(readr)
+# Uploading divvy datasets here
+Q2_2019 <- read_csv("Divvy_Trips_2019_Q2.csv")
+Q3_2019 <- read_csv("Divvy_Trips_2019_Q3.csv")
+Q4_2019 <- read_csv("Divvy_Trips_2019_Q4.csv")
+Q1_2020 <- read_csv("Divvy_Trips_2020_Q1.csv")
+```
+
+#### Wrangle Data and Combine to a Single File
+
+compare column names of each of the files
+While the column names need not be in same order, but they do need to perfectly match before we can use a command to join them into one file.
+
+```{r wrangle data}
+colnames(Q2_2019)
+colnames(Q3_2019)
+colnames(Q4_2019)
+colnames(Q1_2020)
+```
+
+Rename columns to make them consistent with Q1_2020(as this will be the supposed going forward table design for Divvy)
+
+```{r renaming columns}
+Q4_2019 <- rename(Q4_2019,
+                  ride_id = trip_id,
+                  rideable_type = bikeid,
+                  started_at = start_time,
+                  ended_at = end_time,
+                  start_station_name = from_station_name,
+                  start_station_id = from_station_id,
+                  end_station_name = to_station_name,
+                  end_station_id = to_station_id,
+                  member_casual = usertype)
+(Q3_2019 <- rename(Q3_2019,
+                   ride_id = trip_id,
+                   rideable_type = bikeid,
+                   started_at = start_time,
+                   ended_at = end_time,
+                   start_station_name = from_station_name,
+                   start_station_id = from_station_id,
+                   end_station_name = to_station_name,
+                   end_station_id = to_station_id,
+                   member_casual = usertype))
+Q2_2019 <- rename(Q2_2019,
+                  ride_id = "01 - Rental Details Rental ID",
+                  rideable_type = "01 - Rental Details Bike ID",
+                  started_at = "01 - Rental Details Local Start Time",
+                  ended_at = "01 - Rental Details Local End Time",
+                  start_station_name = "03 - Rental Start Station Name",
+                  start_station_id = "03 - Rental Start Station ID",
+                  end_station_name = "02 - Rental End Station Name",
+                  end_station_id = "02 - Rental End Station ID",
+                  member_casual = "User Type")
+str(Q2_2019)
+str(Q3_2019)
+str(Q4_2019)
+str(Q1_2020)
+```
+Convert ride_id and rideable_type to character so that they can stack correctly
+
+```{r converting data type}
+Q4_2019 <- mutate(Q4_2019,
+                  ride_id = as.character(ride_id),rideable_type = as.character(rideable_type))
+Q3_2019 <- mutate(Q3_2019,
+                  ride_id = as.character(ride_id),rideable_type = as.character(rideable_type))
+Q2_2019 <- mutate(Q2_2019,
+                  ride_id = as.character(ride_id),rideable_type = as.character(rideable_type))
+```
+
+stack individual quarters data frames to one data frame
+```{r stacking to one data frame}
+all_trips <- bind_rows(Q2_2019,Q3_2019,Q4_2019,Q1_2020)
+all_trips <- all_trips %>% 
+  select(-c(start_lat,start_lng,end_lat,end_lng,birthyear,gender,"01 - Rental Details Duration In Seconds Uncapped", "05 - Member Details Member Birthday Year","Member Gender","tripduration"))
+```
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
