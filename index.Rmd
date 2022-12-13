@@ -129,12 +129,127 @@ all_trips <- bind_rows(Q2_2019,Q3_2019,Q4_2019,Q1_2020)
 all_trips <- all_trips %>% 
   select(-c(start_lat,start_lng,end_lat,end_lng,birthyear,gender,"01 - Rental Details Duration In Seconds Uncapped", "05 - Member Details Member Birthday Year","Member Gender","tripduration"))
 ```
-## Including Plots
 
-You can also embed plots, for example:
+## clean up and add data for analysis
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+inspect the new table that has been created
+
+```{r inspecting data}
+colnames(all_trips)
+nrow(all_trips)
+dim(all_trips)
+head(all_trips)
+str(all_trips)
+summary(all_trips)
+
+```
+There are few problems that need to be fixed: they are
+
+* In the "member_casual" column, there are two names for members ("member" and "Subscriber") and two names for casual riders ("Customer" and "casual"). We will need to consolidate that from four to two labels.
+
+* The data can only be aggregated at the ride-level, which is too granular. We will want to add some additional columns of data -- such as day, month, year -- that provide additional opportunities to aggregate the data.
+
+* We will want to add a calculated field for length of ride since the 2020Q1 data did not have the "tripduration" column. We will add "ride_length" to the entire dataframe for consistency.
+
+* There are some rides where tripduration shows up as negative, including several hundred rides where Divvy took bikes out of circulation for Quality Control reasons. We will want to delete these rides.
+
+
+ In the "member_casual" column, replace "Subscriber" with "member" and "Customer" with "casual". Before 2020, Divvy used different labels for these two types of riders ... we will want to make our dataframe consistent with their current nomenclature
+ 
+```{r renaming values of member_casual}
+table(all_trips$member_casual)
+all_trips <- all_trips %>% 
+  mutate(member_casual = recode(member_casual,"Subscriber" = "member", "Customer" = "casual"))
+table(all_trips$member_casual)
+
+```
+
+Add columns that list the date, month, day, and year of each ride. This will allow us to aggregate ride data for each month, day, or year ... before completing these operations we could only aggregate at the ride level
+
+```{r adding columns that list date,month,year and date}
+all_trips$date <- as.Date(all_trips$started_at)
+all_trips$month <- format(as.Date(all_trips$date),"%m")
+all_trips$day <- format(as.Date(all_trips$date),"%d")
+all_trips$year <- format(as.Date(all_trips$date),"%Y")
+all_trips$day_of_week <- format(as.Date(all_trips$date),"%A")
+
+```
+
+add a ride length calculation to all_trips(in seconds)
+
+```{r calculating ride_length}
+all_trips$ride_length <- difftime(all_trips$ended_at,all_trips$started_at)
+str(all_trips)
+```
+convert ride_length from factor to numeric so we can run calculations on data
+
+```{r converting ride_length to numeric}
+is.factor(all_trips$ride_length)
+all_trips$ride_length <- as.numeric(as.character(all_trips$ride_length))
+is.numeric(all_trips$ride_length)
+```
+
+Remove "bad" data, The dataframe includes a few hundred entries when bikes were taken out of docks and checked for quality by Divvy or ride_length was negative. We will create a new version of the dataframe (v2) since data is being removed
+
+```{r removing bad data}
+all_trips_V2 <- all_trips[!(all_trips$start_station_name=="HQ QR"|all_trips$ride_length<0),]
+
+```
+
+## Conducting Descriptive Analysis
+
+Descriptive analysis on ride_length (all figures in seconds).
+
+```{r conducting descriptive analysis1}
+mean(all_trips_V2$ride_length)
+median(all_trips_V2$ride_length)
+min(all_trips_V2$ride_length)
+max(all_trips_V2$ride_length)
+summary(all_trips_V2$ride_length)
+```
+comparing members and casual Users, based on their ride_length
+
+```{r comparing members and casual users}
+aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = mean)
+aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = median)
+aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = max)
+aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = min)
+```
+noticed that the days of the week are are out of order let's fix that
+
+```{r fixing order of day of the week column}
+all_trips_V2$day_of_week <- ordered(all_trips_V2$day_of_week, levels = c('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'))
+
+```
+
+
+let's run the average ride time by each day for members vs casual users
+
+```{r average ride time by each day}
+aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual + all_trips_V2$day_of_week, FUN = mean)
+
+```
+
+analyzing and visualizing the number of rides by rider_type
+
+```{r analyzing and visualizing the number of rides by rider type}
+all_trips_V2 %>% 
+  mutate(weekday = wday(started_at,label = TRUE)) %>% 
+  group_by(member_casual,weekday) %>% 
+  summarise(number_of_rides = n(), average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, weekday) %>% 
+  ggplot(aes(x=weekday,y=number_of_rides,fill=member_casual))+geom_col(position='dodge')
+```
+
+creating a visualization for average duration
+
+```{r visualization for average duration}
+all_trips_V2 %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>% 
+  group_by(member_casual,weekday) %>% 
+  summarise(number_of_rides = n(),average_duration=mean(ride_length)) %>% 
+  arrange(member_casual,weekday) %>% 
+  ggplot(aes(x=weekday,y=average_duration,fill=member_casual))+geom_col(position='dodge')
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
