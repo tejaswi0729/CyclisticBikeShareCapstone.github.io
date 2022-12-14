@@ -252,4 +252,28 @@ all_trips_V2 %>%
   ggplot(aes(x=weekday,y=average_duration,fill=member_casual))+geom_col(position='dodge')
 ```
 
+visualizing the data by number of rides by member_casual and month
+
+```{r visualizing number of rides by month}
+all_trips_V2 %>% 
+  group_by(member_casual,month) %>% 
+  summarise(number_of_rides = n(), average_duration = mean(ride_length)) %>% 
+  arrange(member_casual,month) %>% 
+  ggplot(aes(x=month,y=number_of_rides,fill=member_casual))+geom_col(position='dodge')
+
+```
+visualizing the data by avearge duration of rides by member_casual and month
+
+```{r visualizing average duration by month}
+all_trips_V2 %>% 
+  group_by(member_casual,month) %>% 
+  summarise(number_of_rides = n(),average_duration = mean(ride_length)) %>% 
+  arrange(member_casual,month) %>% 
+  ggplot(aes(x=month,y=average_duration,fill=member_casual))+geom_col(position='dodge')
+
+```
+
+
+
+
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
