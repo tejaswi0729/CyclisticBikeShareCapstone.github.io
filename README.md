@@ -1,6 +1,6 @@
 # CyclisticBikeShareCapstone.github.io
 
-Welcome to the Cyclistic bike-share analysis case study! In this case study, I have performed some real-world tasks of a junior data analyst. I have worked for a 
+Welcome to the Cyclistic bike-share analysis case study! As part of my Google Data Analytics certification, I have worked on this case study, I have performed some real-world tasks of a junior data analyst. I have worked for a 
 fictional company, Cyclistic, and met different characters and team members. In order to answer the key business questions
 
 ## Cyclistic
