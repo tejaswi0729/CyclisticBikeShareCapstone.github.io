@@ -10,5 +10,5 @@ and cargo bikes, making bike-share more inclusive to people with disabilities an
 traditional bikes; about 8% of riders use the assistive options. Cyclistic users are more likely to ride for leisure, but about 30% use them to commute to work each day.
 
 I have documented all the steps followed to find a marketing strategy to maximize the number of annual Memberships by converting casual riders into annual members
-index.rmd
+in index.rmd file
 
