@@ -67,6 +67,7 @@ Q1_2020 <- read_csv("Divvy_Trips_2020_Q1.csv")
 compare column names of each of the files
 While the column names need not be in same order, but they do need to perfectly match before we can use a command to join them into one file.
 
+colnames() - it is a function in R used to obtain the names of columns in a matrix-like object.
 ```{r wrangle data}
 colnames(Q2_2019)
 colnames(Q3_2019)
@@ -75,7 +76,11 @@ colnames(Q1_2020)
 ```
 
 Rename columns to make them consistent with Q1_2020(as this will be the supposed going forward table design for Divvy)
+to rename the columns we use rename method.
 
+rename() - it is a method available in the dplyr package, which is used to change the particular column name present in the data frame. The operator - %>% (pipe) is used to load the renamed column names to the data frame. At a time we can change single or multiple column names
+
+str() - it is a function in R language used for compactly displaying the internal structure of a R object.
 ```{r renaming columns}
 Q4_2019 <- rename(Q4_2019,
                   ride_id = trip_id,
@@ -114,6 +119,7 @@ str(Q1_2020)
 ```
 Convert ride_id and rideable_type to character so that they can stack correctly
 
+mutate() - it adds new variables while retaining old variables to a data frame.
 ```{r converting data type}
 Q4_2019 <- mutate(Q4_2019,
                   ride_id = as.character(ride_id),rideable_type = as.character(rideable_type))
@@ -124,6 +130,10 @@ Q2_2019 <- mutate(Q2_2019,
 ```
 
 stack individual quarters data frames to one data frame
+
+bind_rows() - it is a function used to combine rows of two data frames.
+
+select() - it is used to pick specific variables or features of a data frame or a tibble
 ```{r stacking to one data frame}
 all_trips <- bind_rows(Q2_2019,Q3_2019,Q4_2019,Q1_2020)
 all_trips <- all_trips %>% 
@@ -134,6 +144,13 @@ all_trips <- all_trips %>%
 
 inspect the new table that has been created
 
+nrow() - used to return the number of rows of the specified data frame or matrix.
+
+dim() - used to set or get the dimensions of the specified matrix, array or data frame.
+
+head() - used to display the first n rows present in the input data frame, by default it will show first 6 rows of data frame.
+
+summary() - to produce or display the summary of all records present in the found set.
 ```{r inspecting data}
 colnames(all_trips)
 nrow(all_trips)
@@ -166,6 +183,8 @@ table(all_trips$member_casual)
 
 Add columns that list the date, month, day, and year of each ride. This will allow us to aggregate ride data for each month, day, or year ... before completing these operations we could only aggregate at the ride level
 
+format() - it is used to format strings, dates and numbers in a specified style.
+
 ```{r adding columns that list date,month,year and date}
 all_trips$date <- as.Date(all_trips$started_at)
 all_trips$month <- format(as.Date(all_trips$date),"%m")
@@ -177,6 +196,7 @@ all_trips$day_of_week <- format(as.Date(all_trips$date),"%A")
 
 add a ride length calculation to all_trips(in seconds)
 
+difftime() - it computes the difference between two objects of date or time.
 ```{r calculating ride_length}
 all_trips$ride_length <- difftime(all_trips$ended_at,all_trips$started_at)
 str(all_trips)
@@ -200,6 +220,14 @@ all_trips_V2 <- all_trips[!(all_trips$start_station_name=="HQ QR"|all_trips$ride
 
 Descriptive analysis on ride_length (all figures in seconds).
 
+mean() - used to calculate the arithmetic mean of the elements of the numeric vector passed to it as argument
+
+median() - it accepts a vector as an input . if there are an odd number of values in the vector , the function returns the middle valueif there are even number of values in the vector , the function returns the average of two medians
+
+min() - used to find the minimum element present in an object. this object can be a vector, a list, a matrix, a data frame etc.
+
+max() -  used to find the maximum element present in an object. this object can be a vector, a list, a matrix, a data frame etc.
+
 ```{r conducting descriptive analysis1}
 mean(all_trips_V2$ride_length)
 median(all_trips_V2$ride_length)
@@ -209,6 +237,7 @@ summary(all_trips_V2$ride_length)
 ```
 comparing members and casual Users, based on their ride_length
 
+aggregate() - it is used to get the summary statistics of the data by group
 ```{r comparing members and casual users}
 aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = mean)
 aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual, FUN = median)
@@ -231,6 +260,14 @@ aggregate(all_trips_V2$ride_length ~ all_trips_V2$member_casual + all_trips_V2$d
 ```
 
 analyzing and visualizing the number of rides by rider_type
+
+group_by() - it belongs to the dplyr package in R, which groups the data frames
+
+summarise() - it is used in the R program to to summarize the data frame into just one value or vector. This summarization is done through grouping observations by using categorical values at first, using the group_by() function. the dplyr package is used to get the summary of dataset.
+
+arrange() - it is a function used in R to reorder the rows of a data frame/table by using column names.
+
+ggplot() - it is a plotting package that provides helpful commands to create complex plots from data in a date frame.
 
 ```{r analyzing and visualizing the number of rides by rider type}
 all_trips_V2 %>% 
@@ -273,7 +310,34 @@ all_trips_V2 %>%
 
 ```
 
+## Summary of above analysis
+
+*  In a week, maximum number of rides are taken by annual members when compared with number of rides taken by casual members
+
+*  In a week less rides are taken by annual members on weekend(i.e saturday and sunday) when compared with other days
+
+*  In a week more rides are taken by casual members on weekend(i.e saturday and sunday) when compared with other days
+
+*  In a week average ride length of casual members is greater than average ride length of annual members
+
+*  In a year number of rides are higher in mid-year(april,may,june,july,august,september,october) by both annual members and casual members
+
+*  In a year the average duration of rides is greater in january and decreases gradually in further months. especially for casual members.
 
 
+## Recommendations based on my analysis
+
+*  As casual customers average ride_length is high, could be that most of them are travelling between far places. So, using this some kind of offers or schemes could be introduced to attract those casual customers to avail annual membership and provide them some benefits as they travel for long distance
+
+ex: if they have this annual membership, they could save some expense on ride between two far places upto xkm/m
+
+(or)
+
+if the casual customer is using the drives on daily basis, they could be charged with a reasonable monthly charge 
+rather than daily charge as it would save expense of customer on daily rides.
+
+*  On weekends, and holiday seasons casual members take more number of rides, so we could introduce some benefits on rides taken on weekends for only annual members, this would help in attracting casual customers to take the annual membership.
+
+* Making sure to spread the awareness of benefits and facilities of annual membership.
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
